@@ -1,2 +1,5 @@
 node_modules/
+jspm_packages/
 .npm
+.pf_mediatemp/
+pf_mediatemp/
