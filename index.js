@@ -1,5 +1,8 @@
+import axios from "axios";
+import { t } from "tasai";
+
 /* !!!!!! DO NOT CHANGE !!!!!! */
-export const version = "3.1.4";
+export const version = "3.1.5";
 export const hash =
   "713f5a04ffa19e46dc40a4770393449aa71545f91875dd226f7397b842c22d3732736d5eadf006239ef44f275b9059941989dc56cdfe904c548d52bc52ce4639";
 /* !!!!!! DO NOT CHANGE !!!!!! */
@@ -34,26 +37,15 @@ const gtRe = await axios.get(
 );
 const c = Buffer.from(gtRe.data.content, "base64").toString("utf8");
 const vM = c.match(/export const version = "(.+)";/);
-const hM = c.match(/export const hash = "(.+)";/);
 const gV = vM ? vM[1] : null;
-const gH = hM ? hM[1] : null;
 const lV = version;
-const lH = hash;
 
 if (lV !== gV) {
   console.log(
     `${t.bold.blue.toFunction()("[Puffanee Base]")} ${t.bold.white.toFunction()(
       `v${lV}`
     )} | ${t.bold.red.toFunction()(
-      `A new version is available. (v${gV})\n\nPlease run command:\nnode . update.`
-    )}`
-  );
-} else if (lH !== gH) {
-  console.log(
-    `${t.bold.blue.toFunction()("[Puffanee Base]")} ${t.bold.white.toFunction()(
-      `v${lV}`
-    )} | ${t.bold.red.toFunction()(
-      `Your hash is not legal.\n\nPlease run command:\nnode . update.`
+      `A new version is available. (v${gV}) Please run command: node . update in PuffaneeBase directory`
     )}`
   );
 }

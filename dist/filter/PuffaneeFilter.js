@@ -1,20 +1,37 @@
-import fs from "fs";
+import { dirname } from "node:path";
+import fetch from "node-fetch";
 
 export class PuffaneeFilter {
   constructor() {
-    const badWordJSONFile =
-      "src/puffaneeBase/dist/filter/badWord_filter/bw_blacklist.json";
-    const badWordJSONData = fs.readFileSync(badWordJSONFile);
-    const badWordWHLJSONFile =
-      "src/puffaneeBase/dist/filter/badWord_filter/bw_whitelist.json";
-    const badWordWHLJSONData = fs.readFileSync(badWordWHLJSONFile);
-    const linkFilterWHLJSONFile =
-      "src/puffaneeBase/dist/filter/link_filter/lf_whitelist.json";
-    const linkFilterWHLJSONData = fs.readFileSync(linkFilterWHLJSONFile);
+    const __filename = new URL(import.meta.url).pathname;
+    this.__dirname = dirname(__filename);
 
-    this.bw_blacklist = JSON.parse(badWordJSONData);
-    this.bw_whitelist = JSON.parse(badWordWHLJSONData);
-    this.lf_whitelist = JSON.parse(linkFilterWHLJSONData);
+    this.init();
+  }
+
+  async init() {
+    try {
+      this.bw_blacklist = await this.fetchJSON(
+        "https://raw.githubusercontent.com/puffanee/filter/refs/heads/main/bw_blacklist.json"
+      );
+      this.bw_whitelist = await this.fetchJSON(
+        "https://raw.githubusercontent.com/puffanee/filter/refs/heads/main/bw_whitelist.json"
+      );
+      this.lf_whitelist = await this.fetchJSON(
+        "https://raw.githubusercontent.com/puffanee/filter/refs/heads/main/lf_whitelist.json"
+      );
+    } catch (error) {
+      console.error("Error loading JSON files:", error);
+    }
+  }
+
+  // URL'den JSON verisini çeken metod
+  async fetchJSON(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
   }
 
   /**

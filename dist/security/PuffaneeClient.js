@@ -79,9 +79,9 @@ export class PuffaneeClient {
             .setTimestamp();
 
           console.log(
-            t.bold.yellow.toFunction()("[Puffanee] Client Login ") +
+            t.bold.blue.toFunction()("[Puffanee] Client Login ") +
               t.green.toFunction()(
-                `${this.client.user.id} | Token login successful.`
+                `Token login successful. ${this.client.user.id}`
               )
           );
 
@@ -93,7 +93,7 @@ export class PuffaneeClient {
           }
         } else {
           console.log(
-            t.bold.yellow.toFunction()("[Puffanee] Client Login ") +
+            t.bold.blue.toFunction()("[Puffanee] Client Login ") +
               t.bold.red.toFunction()(`'${agip}' Non-secure IP Address.`)
           );
         }
@@ -118,9 +118,9 @@ export class PuffaneeClient {
           .setTimestamp();
 
         console.log(
-          t.bold.yellow.toFunction()("[Puffanee] Client Login ") +
+          t.bold.blue.toFunction()("[Puffanee] Client Login ") +
             t.green.toFunction()(
-              `${this.client.user.id} | Token login successful.`
+              `Token login successful. ${this.client.user.id}`
             )
         );
 
