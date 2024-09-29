@@ -3,3 +3,4 @@ jspm_packages/
 .npm
 .pf_mediatemp/
 pf_mediatemp/
+dist/panel/last_discord_rpc_activity.json

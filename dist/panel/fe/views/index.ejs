@@ -231,8 +231,14 @@
               s2Spinner(false);
               const cd = data.clientData;
               const Presence = cd.Presence;
-              const Maintenance = cd.MaintenanceState ? true : false;
-              const Debug = cd.DebugState ? true : false;
+              let Maintenance = false;
+              let Debug = false;
+              if (cd.MaintenanceState === "1") {
+                Maintenance = true;
+              }
+              if (cd.DebugState === "1") {
+                Debug = true;
+              }
               const SvAuth = cd.ServerAuthorize;
               const Developers = cd.Developers;
               const AuthIps = cd.AuthorizedIpAdresses;
@@ -273,7 +279,7 @@
                       const AvatarID = GDD.avatar;
                       const Avatar = `https://cdn.discordapp.com/avatars/${UserID}/${AvatarID}?size=64`;
                       $("#sclma_devs").append(
-                        `<br/><img src="${Avatar}" class="dev-avatar-small"> <a href="https://discord.com/users/${UserID}"><strong>${username}</strong></a>`
+                        `<br/><img src="${Avatar}" class="dev-avatar-small"><a href="https://discord.com/users/${UserID}"><strong>${username}</strong></a>`
                       );
                     } else {
                       $("#sclma_devs").append(

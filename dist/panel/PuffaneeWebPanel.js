@@ -5,8 +5,11 @@ import fs from "fs";
 
 import crypto from "crypto";
 import os from "os";
-import net from "net";
 import { t } from "tasai";
+
+import { PuffaneeConfig } from "../helper/PuffaneeConfig.js";
+
+import { ActivityType } from "discord.js";
 
 const DEFAULT_CONFIG = {
   portrange_mi: 25650,
@@ -23,7 +26,7 @@ const pfportrange = (port) => {
 /**
  * Puffanee Web Panel Class
  */
-export class PuffaneeWebPanel {
+export class PuffaneeWebPanel extends PuffaneeConfig {
   /**
    *
    * @param {*} Client Bot Discord Client
@@ -32,6 +35,8 @@ export class PuffaneeWebPanel {
    * @param {Date} AppStartTime App start Date Time ( Default is: Date() )
    */
   constructor(Client, WebPort, Passwords, AppStartTime = new Date()) {
+    super();
+
     if (!Client) {
       throw new Error(
         "[Puffanee] Web Class Construct Error: 'Client' is invalid"
@@ -181,31 +186,13 @@ export class PuffaneeWebPanel {
 
   /**
    * Open new express server with construct data
-   * @param {object} Security Security configuration object data
-   * @param {string} PuffaneeMTNCDG_Path Puffanee Maintenance Debug Database Configuration class path string
    */
-  /**
-   * Open new express server with construct data
-   * @param {object} Security Security configuration object data
-   * @param {*} getDebugState MTNCDG getDebugState Function
-   * @param {*} setDebugState MTNCDG setDebugState Function
-   * @param {*} getMaintenanceState MTNCDG getMaintenanceState Function
-   * @param {*} setMaintenanceState MTNCDG setMaintenanceState Function
-   * @param {*} OppositeDebugState MTNCDG OppositeDebugState Function
-   * @param {*} OppositeMaintenanceState MTNCDG OppositeMaintenanceState Function
-   */
-  async Open(
-    Security,
-    getDebugState,
-    setDebugState,
-    getMaintenanceState,
-    setMaintenanceState,
-    OppositeDebugState,
-    OppositeMaintenanceState
-  ) {
+  async Open() {
     if (!this.Path_Views || !this.Path_Static) {
       throw new Error("[Puffanee] Web Class Open Error: 'Paths' are not set");
     }
+
+    const pfconfig = new PuffaneeConfig();
 
     const app = express();
     app.use(express.json());
@@ -258,14 +245,41 @@ export class PuffaneeWebPanel {
             });
           }
         } else if (type === "debugstate") {
-          const oppositedDebug = await OppositeDebugState();
-          const updatedDebug = await setDebugState(oppositedDebug);
+          const GetDebugState = await pfconfig.GetConfig("AppDebugState");
+          let Opposite;
+          if (GetDebugState === "1") {
+            Opposite = false;
+          } else if (GetDebugState === "0") {
+            Opposite = true;
+          }
+          const updatedDebug = await pfconfig.UpdateConfig(
+            "AppDebugState",
+            Opposite
+          );
+
+          if (Opposite) {
+            console.log(
+              t.bold.blue.toFunction()("[Puffanee] ") +
+                t.bold.white.toFunction()("Configuration ") +
+                t.green.toFunction()(
+                  `The 'Debug' configuration was activated by the panel.`
+                )
+            );
+          } else {
+            console.log(
+              t.bold.blue.toFunction()("[Puffanee] ") +
+                t.bold.white.toFunction()("Configuration ") +
+                t.red.toFunction()(
+                  `The 'Debug' configuration has been disabled by the panel.`
+                )
+            );
+          }
 
           if (updatedDebug) {
             res.json({
               validation: true,
               success: true,
-              newStatus: oppositedDebug,
+              newStatus: Opposite,
             });
           } else {
             res.json({
@@ -275,14 +289,99 @@ export class PuffaneeWebPanel {
             });
           }
         } else if (type === "maintenancestate") {
-          const oppositedMtnc = await OppositeMaintenanceState();
-          const updatedMtnc = await setMaintenanceState(oppositedMtnc);
+          const GetMtncState = await pfconfig.GetConfig("AppMaintenanceState");
+          let Opposite;
+          if (GetMtncState === "1") {
+            Opposite = false;
+          } else if (GetMtncState === "0") {
+            Opposite = true;
+          }
+          const updatedMtnc = await pfconfig.UpdateConfig(
+            "AppMaintenanceState",
+            Opposite
+          );
+
+          const activity = this.client.user?.presence.activities[0];
+          const activityName = activity?.name;
+          const activityType = activity?.type;
+          const activityStatus = this.client.user?.presence.status;
+
+          function saveActivityToFile(activity) {
+            fs.writeFileSync(
+              join(__dirname, "./last_discord_rpc_activity.json"),
+              JSON.stringify(activity)
+            );
+          }
+          function loadActivityFromFile() {
+            if (
+              fs.existsSync(join(__dirname, "./last_discord_rpc_activity.json"))
+            ) {
+              const data = fs.readFileSync(
+                join(__dirname, "./last_discord_rpc_activity.json")
+              );
+              return JSON.parse(data);
+            }
+            return null;
+          }
+
+          let lastActivity = {
+            name: null,
+            type: null,
+            status: null,
+          };
+
+          if (Opposite) {
+            lastActivity.name = activityName;
+            lastActivity.type = activityType;
+            lastActivity.status = activityStatus;
+            saveActivityToFile(lastActivity);
+
+            this.client.user?.setPresence({
+              activities: [
+                {
+                  name: `🔧 Bakım / Maintenance Active`,
+                  type: ActivityType.Listening,
+                },
+              ],
+              status: "dnd",
+            });
+
+            console.log(
+              t.bold.blue.toFunction()("[Puffanee] ") +
+                t.bold.white.toFunction()("Configuration ") +
+                t.green.toFunction()(
+                  `The 'Maintenance' configuration was activated by the panel.`
+                )
+            );
+          } else {
+            const savedActivity = loadActivityFromFile();
+            if (savedActivity) {
+              lastActivity = savedActivity;
+            }
+
+            if (lastActivity.name && lastActivity.type && lastActivity.status) {
+              this.client.user?.setPresence({
+                activities: [
+                  { name: lastActivity.name, type: lastActivity.type },
+                ],
+                status: lastActivity.status,
+              });
+            }
+
+            console.log(
+              t.bold.blue.toFunction()("[Puffanee] ") +
+                t.bold.white.toFunction()("Configuration ") +
+                t.red.toFunction()(
+                  `The 'Maintenance' configuration has been disabled by the panel.`
+                )
+            );
+          }
 
           if (updatedMtnc) {
             res.json({
               validation: true,
               success: true,
-              newStatus: oppositedMtnc,
+              newStatus: Opposite,
             });
           } else {
             res.json({
@@ -364,12 +463,29 @@ export class PuffaneeWebPanel {
         const activity = this.client.user?.presence.activities[0];
         const status = this.client.user?.presence.status;
 
+        let C_AuthorizedServers = await pfconfig.GetConfig(
+          "Security_AuthorizedServers"
+        );
+        let C_MaintenanceState = await pfconfig.GetConfig(
+          "AppMaintenanceState"
+        );
+        let C_DebugState = await pfconfig.GetConfig("AppDebugState");
+        let C_Developers = await pfconfig.GetConfig("Developers");
+        let C_AuthorizedIpAdresses = await pfconfig.GetConfig(
+          "Security_AuthorizedIpAdresses"
+        );
+
+        if (C_MaintenanceState === "DataNotFoundInDb")
+          C_MaintenanceState = false;
+        if (C_DebugState === "DataNotFoundInDb") C_DebugState = false;
+
         let AuthorizedServersData = [];
         let NotAuthorizedServersData = [];
 
-        if (Security.AuthorizedServers !== null) {
+        if (C_AuthorizedServers !== "DataNotFoundInDb") {
+          C_AuthorizedServers = JSON.parse(C_AuthorizedServers);
           this.client.guilds.cache.forEach(async (guild) => {
-            if (!Security.AuthorizedServers.includes(guild.id)) {
+            if (!C_AuthorizedServers.includes(guild.id)) {
               NotAuthorizedServersData.push(`${guild.id}`);
             } else {
               AuthorizedServersData.push(`${guild.id}`);
@@ -377,19 +493,30 @@ export class PuffaneeWebPanel {
           });
         }
 
+        if (C_Developers !== "DataNotFoundInDb") {
+          C_Developers = JSON.parse(C_Developers);
+        } else {
+          C_Developers = [];
+        }
+
+        if (C_AuthorizedIpAdresses !== "DataNotFoundInDb") {
+          C_AuthorizedIpAdresses = JSON.parse(C_AuthorizedIpAdresses);
+        } else {
+          C_AuthorizedIpAdresses = [];
+        }
+
         const MachineIpAdresses = this.MachineIpAdressesList();
 
         clienData = {
           Presence: { ActivityData: activity, Status: status },
-          MaintenanceState: await getMaintenanceState(),
-          DebugState: await getDebugState(),
+          MaintenanceState: C_MaintenanceState,
+          DebugState: C_DebugState,
           ServerAuthorize: {
-            ValidServers: Security.AuthorizedServers,
             AuthorizedServers: AuthorizedServersData,
             NotAuthorizedServers: NotAuthorizedServersData,
           },
-          Developers: Security.Developers,
-          AuthorizedIpAdresses: Security.AuthorizedIpAdresses,
+          Developers: C_Developers,
+          AuthorizedIpAdresses: C_AuthorizedIpAdresses,
           MachineIpAdresses: MachineIpAdresses,
         };
 
