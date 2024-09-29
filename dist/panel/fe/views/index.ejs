@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      <%= bot.user.username %> #<%= bot.user.discriminator %> - by Puffanee
+    </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+      integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link
+      rel="icon"
+      type="image/x-png"
+      href="<%= bot.user.displayAvatarURL({ format: 'png', size: 64 }) %>"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <script src="/js/alert.js"></script>
+    <script>
+      function cfl(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+      }
+    </script>
+    <style>
+      #DataStatus,
+      #DataDebug,
+      #DataMaintenance {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="operation-spinner-wrapper">
+      <div class="operation-spinner"></div>
+    </div>
+
+    <div class="stateshow-wrapper">
+      <div class="stateshow-icon"></div>
+    </div>
+
+    <div id="alerts"></div>
+
+    <div class="pf-logo">
+      <img
+        src="https://media.storage.puffanee.net.tr/uploaded/3c59ffd92200cbfab875032003cdffe62f54b412ee5f922225b8d88e8b0dd895"
+      />
+    </div>
+    <div class="header-container">
+      <div class="header">
+        <img
+          src="<%= bot.user.displayAvatarURL({ format: 'png', size: 256 }) %>"
+          class="bot-avatar <%= bot.presence.status %>-border"
+        />
+        <h1 class="bot-name"><%= bot.user.username %></h1>
+        <p class="bot-data">
+          <strong>
+            <i class="fa-solid fa-hashtag"></i>
+            <span
+              data-copy="true"
+              data-copytext="#<%= bot.user.discriminator %>"
+            >
+              <%= bot.user.discriminator %>
+            </span>
+          </strong>
+          <strong>
+            <i class="fa-brands fa-discord"></i>
+            <span data-copy="true" data-copytext="<%= bot.user.id %>">
+              <%= bot.user.id %>
+            </span>
+          </strong>
+        </p>
+      </div>
+    </div>
+
+    <div class="info-boxes-container">
+      <div class="info-boxes">
+        <div class="info-box">
+          <h3 class="info-box__title">Work</h3>
+          <div class="info-box__content mt-10">
+            <strong>Uptime</strong>:<br />
+            <span id="UptimeTime"></span>
+          </div>
+          <div class="info-box__content mt-20">
+            <strong>Client Ping</strong>: <span id="PingData"></span>
+          </div>
+          <div class="info-box__content mt-20">
+            <strong>Total Shards</strong>: <%= bot.ws.totalShards %> Shards
+          </div>
+          <div class="info-box__content mt-20">
+            <strong>API Version</strong>: v<%= bot.rest.options.version %>
+          </div>
+          <div class="info-box__content mt-20">
+            <strong>Web Port</strong>:
+            <script>
+              document.write(window.location.port);
+            </script>
+          </div>
+        </div>
+        <div class="info-box">
+          <h3 class="info-box__title">Load</h3>
+          <div class="info-box__content">
+            <strong>Events</strong>: <%= bot.events.size %>
+          </div>
+          <div class="info-box__content mt-10">
+            <strong>Buttons</strong>: <%= bot.buttonCommands.size %>
+          </div>
+          <div class="info-box__content mt-10">
+            <strong>Select Menus</strong>: <%= bot.selectMenus.size %>
+          </div>
+          <div class="info-box__content mt-10">
+            <strong>Modal Forms</strong>: <%= bot.modalForms.size %>
+          </div>
+          <div class="info-box__content mt-10">
+            <strong>Context Menus</strong>: <%= bot.contextMenus.size %>
+          </div>
+          <div class="info-box__content mt-10">
+            <strong>Slash Commands</strong>: <%= bot.slashCommands.size %>
+          </div>
+        </div>
+        <div class="info-box">
+          <h3 class="info-box__title">Client</h3>
+          <div class="security-login" id="sclhauth" style="display: block">
+            <h2>If you are request this box, please click the button</h2>
+            <button id="SecurityLogin">See</button>
+          </div>
+          <span id="sclma" style="display: none">
+            <div class="info-box__content mt-10">
+              <strong>Presence</strong>:<br />
+              <data id="sclma_presence"></data>
+            </div>
+            <div class="info-box__content mt-10">
+              <strong>Maintenance & Debug</strong>:<br />
+              <data id="sclma_bkm"></data> & <data id="sclma_dbg"></data>
+            </div>
+            <div class="info-box__content mt-10">
+              <strong style="margin-bottom: 10px">Developers</strong>:
+              <data id="sclma_devs"></data>
+            </div>
+          </span>
+        </div>
+        <div class="info-box">
+          <h3 class="info-box__title">Security</h3>
+          <div class="security-login" id="sclhauth2" style="display: block">
+            <h2>If you are request this box, please click the button</h2>
+            <button id="SecurityLogin2">See</button>
+          </div>
+          <span id="sclma2" style="display: none">
+            <div class="info-box__content">
+              <strong>Machine Ip Adresses</strong>:
+              <data id="sclma2_machineips"></data>
+            </div>
+
+            <div class="info-box__content">
+              <strong>Authorized Ip Adresses</strong>:
+              <data id="sclma2_authip"></data>
+            </div>
+
+            <div class="info-box__content mt-10">
+              <strong>Bot Servers</strong>:
+              <data id="sclma2_athsv"></data>
+              <data id="sclma2_nathsv"></data>
+            </div>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+      integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="/js/main.js"></script>
+    <script>
+      function updateUptime() {
+        $.get("/uptime", function (data) {
+          $("#UptimeTime").text(data.uptime);
+        }).fail(function (err) {
+          $("#UptimeTime").text("Server Response Failed");
+        });
+      }
+
+      function updatePing() {
+        $.get("/ping", function (data) {
+          $("#PingData").text(data.ping + "ms");
+        }).fail(function (err) {
+          $("#PingData").text("Server Response Failed");
+        });
+      }
+
+      function oppositeStatus(st) {
+        let op;
+        if (st === "online") {
+          op = "idle";
+        } else if (st === "idle") {
+          op = "dnd";
+        } else if (st === "dnd") {
+          op = "invisible";
+        } else if (st === "invisible") {
+          op = "online";
+        }
+        return op;
+      }
+
+      $(document).ready(async function () {
+        s2Spinner(true);
+        updateUptime();
+        updatePing();
+        setInterval(updateUptime, 1000);
+        setInterval(updatePing, 5000);
+
+        const cookie = getCookie("__mst");
+        const cookiePwd = getCookie("__mstpw");
+        if (cookie === "" && cookiePwd === "") {
+          s2Spinner(false);
+          $("#sclma").fadeOut();
+          $("#sclhauth").fadeIn();
+          $("#sclma2").fadeOut();
+          $("#sclhauth2").fadeIn();
+        } else {
+          $.get(`/clientdata/${cookiePwd}`, async function (data) {
+            if (data.validation && data.clientData !== null) {
+              s2Spinner(false);
+              const cd = data.clientData;
+              const Presence = cd.Presence;
+              const Maintenance = cd.MaintenanceState ? true : false;
+              const Debug = cd.DebugState ? true : false;
+              const SvAuth = cd.ServerAuthorize;
+              const Developers = cd.Developers;
+              const AuthIps = cd.AuthorizedIpAdresses;
+              const PcIpAdresses = cd.MachineIpAdresses;
+              $("#sclhauth").fadeOut();
+              $("#sclhauth2").fadeOut();
+
+              $("#sclma_presence").html(
+                `${Presence.ActivityData?.name} (${
+                  Presence.ActivityData?.type
+                } | <strong class="${
+                  Presence.Status
+                }-text" id="DataStatus" data-status="${Presence.Status}">${cfl(
+                  Presence.Status
+                )}</strong>)`
+              );
+              $("#sclma_dbg").html(
+                `<strong id="DataDebug" data-state="${
+                  Debug ? 1 : 0
+                }" class="${Debug}">${Debug ? "Active" : "Inactive"}</strong>`
+              );
+              $("#sclma_bkm").html(
+                `<strong id="DataMaintenance" data-state="${
+                  Maintenance ? 1 : 0
+                }" class="${Maintenance}">${
+                  Maintenance ? "Active" : "Inactive"
+                }</strong>`
+              );
+
+              if (Developers.length > 0) {
+                for (const dev of Developers) {
+                  try {
+                    const GetDev = await GetUserDiscordProfile(dev);
+                    if (GetDev.success) {
+                      const GDD = GetDev.data;
+                      const UserID = GDD.id;
+                      const username = GDD.username;
+                      const AvatarID = GDD.avatar;
+                      const Avatar = `https://cdn.discordapp.com/avatars/${UserID}/${AvatarID}?size=64`;
+                      $("#sclma_devs").append(
+                        `<br/><img src="${Avatar}" class="dev-avatar-small"> <a href="https://discord.com/users/${UserID}"><strong>${username}</strong></a>`
+                      );
+                    } else {
+                      $("#sclma_devs").append(
+                        `<br/><i class="fa-solid fa-bug"></i> <strong>${dev}</strong>`
+                      );
+                    }
+                  } catch (error) {
+                    console.error("Error fetching developer profile: ", error);
+                    $("#sclma_devs").append(
+                      `<br/><i class="fa-solid fa-bug"></i> <strong>${dev}</strong>`
+                    );
+                  }
+                }
+              } else {
+                $("#sclma_devs").append(
+                  `<br/><i class="fa-solid fa-magnifying-glass"></i> <strong>No developer found</strong>`
+                );
+              }
+
+              if (AuthIps.length > 0) {
+                for (const ip of AuthIps) {
+                  $("#sclma2_authip").append(
+                    `<br/><span data-copy="true" data-copytext="${ip}">${ip}</span>`
+                  );
+                }
+              } else {
+                $("#sclma2_authip").append(
+                  `<br/><i class="fa-solid fa-magnifying-glass"></i> <strong>No ip adress found</strong>`
+                );
+              }
+
+              if (PcIpAdresses.length > 0) {
+                for (const ip of PcIpAdresses) {
+                  $("#sclma2_machineips").append(
+                    `<br/><span data-copy="true" data-copytext="${ip}">${ip}</span>`
+                  );
+                }
+              } else {
+                $("#sclma2_machineips").append(
+                  `<br/><i class="fa-solid fa-magnifying-glass"></i> <strong>No ip adress found</strong>`
+                );
+              }
+
+              if (SvAuth.AuthorizedServers.length > 0) {
+                for (const server of SvAuth.AuthorizedServers) {
+                  try {
+                    const GetServer = await GetServerInfo(server);
+                    if (GetServer.success) {
+                      const GSD = GetServer;
+                      const GuildID = GSD.id;
+                      const GuildName = GSD.name;
+                      const GuildIconURL = GSD.icon;
+                      const GuildMemberCount = GSD.memberCount;
+                      $("#sclma2_athsv").append(
+                        `<br/><img src="${GuildIconURL}" class="dev-avatar-small"> <strong class="true">${GuildName} <small>${GuildID}</small></strong> (${GuildMemberCount})`
+                      );
+                    } else {
+                      $("#sclma2_athsv").append(
+                        `<br/><i class="fa-solid fa-bug"></i> <strong>${server}</strong>`
+                      );
+                    }
+                  } catch (error) {
+                    console.error("Error fetching developer profile: ", error);
+                    $("#sclma2_athsv").append(
+                      `<br/><i class="fa-solid fa-bug"></i> <strong>${server}</strong>`
+                    );
+                  }
+                }
+              }
+
+              if (SvAuth.NotAuthorizedServers.length > 0) {
+                for (const nserver of SvAuth.NotAuthorizedServers) {
+                  try {
+                    const GetServer = await GetServerInfo(nserver);
+                    if (GetServer.success) {
+                      const GSDn = GetServer;
+                      const GuildIDn = GSDn.id;
+                      const GuildNamen = GSDn.name;
+                      const GuildIconURLn = GSDn.icon;
+                      const GuildMemberCountn = GSDn.memberCount;
+                      $("#sclma2_nathsv").append(
+                        `<br/><img src="${GuildIconURLn}" class="dev-avatar-small"> <strong class="false">${GuildNamen} <small>${GuildIDn}</small></strong> (${GuildMemberCountn})`
+                      );
+                    } else {
+                      $("#sclma2_nathsv").append(
+                        `<br/><i class="fa-solid fa-bug"></i> <strong>${nserver}</strong>`
+                      );
+                    }
+                  } catch (error) {
+                    console.error("Error fetching server: ", error);
+                    $("#sclma2_nathsv").append(
+                      `<br/><i class="fa-solid fa-bug"></i> <strong>${nserver}</strong>`
+                    );
+                  }
+                }
+              }
+
+              $("#sclma").fadeIn();
+              $("#sclma2").fadeIn();
+            } else {
+              s2Spinner(false);
+              $("#sclma").fadeOut();
+              $("#sclma2").fadeOut();
+              $("#sclhauth").fadeIn();
+              $("#sclhauth2").fadeIn();
+            }
+          }).fail(function (err) {
+            s2Spinner(false);
+            $("#sclma").fadeOut();
+            $("#sclhauth").fadeIn();
+            $("#sclma2").fadeOut();
+            $("#sclhauth2").fadeIn();
+          });
+          s2Spinner(false);
+        }
+      });
+
+      $(document).ready(function () {
+        $("#sclma_dbg").on("click", "#DataDebug", async function () {
+          try {
+            const mpws = prompt("Please enter operation password");
+            if (mpws !== null) {
+              s2Spinner(true);
+              const l = await OpPasswordLogin(mpws);
+              if (l === true) {
+                const ActiveState = $(this).data("state");
+                const op = await OperationSend(mpws, "debugstate", "");
+
+                if (!op.validation) {
+                  s2Spinner(false);
+                  stateShow(
+                    true,
+                    '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+                  );
+                  showAlert(
+                    `Unauthorized operation login.`,
+                    "bg__softred",
+                    "bg__softred__dark"
+                  );
+                  return;
+                }
+
+                if (!op.success) {
+                  s2Spinner(false);
+                  stateShow(
+                    true,
+                    '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+                  );
+                  showAlert(
+                    `Operation failed.`,
+                    "bg__softred",
+                    "bg__softred__dark"
+                  );
+                  return;
+                }
+
+                s2Spinner(false);
+                stateShow(
+                  true,
+                  '<i class="fa-solid fa-check" style="font-size: 50px; color: var(--softgreen-color);"></i>'
+                );
+                showAlert(
+                  `Debug state successfully updated from '${
+                    ActiveState ? "true" : "false"
+                  }' to '${op.newStatus ? "true" : "false"}'`,
+                  "bg__softgreen",
+                  "bg__softgreen__dark"
+                );
+                setTimeout(() => {
+                  document.location.reload();
+                }, 2000);
+              } else {
+                s2Spinner(false);
+                stateShow(
+                  true,
+                  '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+                );
+                showAlert(`${l}`, "bg__softred", "bg__softred__dark");
+              }
+            }
+          } catch (error) {
+            console.error("An error occurred:", error);
+            s2Spinner(false);
+            stateShow(
+              true,
+              '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+            );
+            showAlert(
+              `An error occurred while processing your request.`,
+              "bg__softred",
+              "bg__softred__dark"
+            );
+          }
+        });
+
+        $("#sclma_bkm").on("click", "#DataMaintenance", async function () {
+          try {
+            const mpws = prompt("Please enter operation password");
+            if (mpws !== null) {
+              s2Spinner(true);
+              const l = await OpPasswordLogin(mpws);
+              if (l === true) {
+                const ActiveState = $(this).data("state");
+                const op = await OperationSend(mpws, "maintenancestate", "");
+
+                if (!op.validation) {
+                  s2Spinner(false);
+                  stateShow(
+                    true,
+                    '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+                  );
+                  showAlert(
+                    `Unauthorized operation login.`,
+                    "bg__softred",
+                    "bg__softred__dark"
+                  );
+                  return;
+                }
+
+                if (!op.success) {
+                  s2Spinner(false);
+                  stateShow(
+                    true,
+                    '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+                  );
+                  showAlert(
+                    `Operation failed.`,
+                    "bg__softred",
+                    "bg__softred__dark"
+                  );
+                  return;
+                }
+
+                s2Spinner(false);
+                stateShow(
+                  true,
+                  '<i class="fa-solid fa-check" style="font-size: 50px; color: var(--softgreen-color);"></i>'
+                );
+                showAlert(
+                  `Maintenance state successfully updated from '${
+                    ActiveState ? "true" : "false"
+                  }' to '${op.newStatus ? "true" : "false"}'`,
+                  "bg__softgreen",
+                  "bg__softgreen__dark"
+                );
+                setTimeout(() => {
+                  document.location.reload();
+                }, 2000);
+              } else {
+                s2Spinner(false);
+                stateShow(
+                  true,
+                  '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+                );
+                showAlert(`${l}`, "bg__softred", "bg__softred__dark");
+              }
+            }
+          } catch (error) {
+            console.error("An error occurred:", error);
+            s2Spinner(false);
+            stateShow(
+              true,
+              '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+            );
+            showAlert(
+              `An error occurred while processing your request.`,
+              "bg__softred",
+              "bg__softred__dark"
+            );
+          }
+        });
+
+        $("#sclma_presence").on("click", "#DataStatus", async function () {
+          try {
+            const mpws = prompt("Please enter operation password");
+            if (mpws !== null) {
+              s2Spinner(true);
+              const l = await OpPasswordLogin(mpws);
+              if (l === true) {
+                const activeStatus = $(this).text();
+                const dataStatus = $(this).data("status");
+                const oppositedStatus = oppositeStatus(dataStatus);
+
+                const op = await OperationSend(
+                  mpws,
+                  "ChangeStatus",
+                  oppositedStatus
+                );
+
+                if (!op.validation) {
+                  s2Spinner(false);
+                  stateShow(
+                    true,
+                    '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+                  );
+                  showAlert(
+                    `Unauthorized operation login.`,
+                    "bg__softred",
+                    "bg__softred__dark"
+                  );
+                  return;
+                }
+
+                if (!op.success) {
+                  if (op.newStatus === "same") {
+                    s2Spinner(false);
+                    stateShow(
+                      true,
+                      '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+                    );
+                    showAlert(
+                      `Please enter not same bot status.`,
+                      "bg__softred",
+                      "bg__softred__dark"
+                    );
+                    return;
+                  }
+                  s2Spinner(false);
+                  stateShow(
+                    true,
+                    '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+                  );
+                  showAlert(
+                    `Operation failed.`,
+                    "bg__softred",
+                    "bg__softred__dark"
+                  );
+                  return;
+                }
+
+                s2Spinner(false);
+                stateShow(
+                  true,
+                  '<i class="fa-solid fa-check" style="font-size: 50px; color: var(--softgreen-color);"></i>'
+                );
+                showAlert(
+                  `Bot status successfully updated from '${dataStatus}' to '${oppositedStatus}'`,
+                  "bg__softgreen",
+                  "bg__softgreen__dark"
+                );
+                setTimeout(() => {
+                  document.location.reload();
+                }, 2000);
+              } else {
+                s2Spinner(false);
+                stateShow(
+                  true,
+                  '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+                );
+                showAlert(`${l}`, "bg__softred", "bg__softred__dark");
+              }
+            }
+          } catch (error) {
+            console.error("An error occurred:", error);
+            s2Spinner(false);
+            stateShow(
+              true,
+              '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
+            );
+            showAlert(
+              `An error occurred while processing your request.`,
+              "bg__softred",
+              "bg__softred__dark"
+            );
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

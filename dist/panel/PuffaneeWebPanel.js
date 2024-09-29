@@ -1,23 +1,12 @@
 import express from "express";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
-import {
-  PuffaneeAPI,
-  PuffaneeMediaStorage,
-  PuffaneeMediaCheck,
-  PuffaneeTime,
-  PuffaneeLogs,
-  PuffaneeFilter,
-  PuffaneeCustomDiscord,
-  PuffaneeSupportJS,
-  PuffaneeClient,
-} from "../../index.js";
-
-import { t } from "tasai";
 import crypto from "crypto";
 import os from "os";
 import net from "net";
+import { t } from "tasai";
 
 const DEFAULT_CONFIG = {
   portrange_mi: 25650,
@@ -30,36 +19,6 @@ const pfportrange = (port) => {
     port >= DEFAULT_CONFIG.portrange_mi && port <= DEFAULT_CONFIG.portrange_mx
   );
 };
-const portuse = (port) => {
-  return new Promise((resolve, reject) => {
-    const tester = net.createConnection({ port }, () => {
-      tester.end();
-      resolve(true);
-    });
-
-    tester.on("error", (err) => {
-      if (err.code === "ECONNREFUSED") {
-        resolve(false);
-      } else {
-        reject(err);
-      }
-    });
-  });
-};
-
-/**
- *  extends ({
-  PuffaneeAPI,
-  PuffaneeMediaStorage,
-  PuffaneeMediaCheck,
-  PuffaneeTime,
-  PuffaneeLogs,
-  PuffaneeFilter,
-  PuffaneeCustomDiscord,
-  PuffaneeSupportJS,
-  PuffaneeClient,
-})
- */
 
 /**
  * Puffanee Web Panel Class
@@ -68,67 +27,46 @@ export class PuffaneeWebPanel {
   /**
    *
    * @param {*} Client Bot Discord Client
-   * @param {number} Port Web panel Port
-   * @param {string} ViewsPath Express views path (index.ejs, home.ejs etc. pages)
-   * @param {string} StaticPath Express statics path (*.css, *.js etc.)
+   * @param {number} WebPort Run port
    * @param {object} Passwords Security passwords ( This Object data must contain 'Master' and 'Operation' password hash in same name values. Hash methods are in documents)
-   * @param {Date} AppStartTime App start Date Time ( Defaukt is: Date() )
+   * @param {Date} AppStartTime App start Date Time ( Default is: Date() )
    */
-  constructor(
-    Client,
-    Port,
-    ViewsPath,
-    StaticPath,
-    Passwords,
-    AppStartTime = Date()
-  ) {
-    if (Client !== null) {
-      this.client = Client;
-    } else {
-      new Error("[Puffanee] Web Class Construct Error: 'Client' invalid");
-    }
-    if (web_port !== null && typeof web_port === "number") {
-      if (pfportrange(Port)) {
-        if (!portuse(Port)) {
-          this.web_port = Port;
-        } else {
-          new Error(
-            "[Puffanee] Web Class Construct Error: Port (" + Port + ") is busy!"
-          );
-        }
-      } else {
-        new Error(
-          "[Puffanee] Web Class Construct Error: Port (" +
-            Port +
-            ") is invalid. (Puffanee Web Panel port range is " +
-            DEFAULT_CONFIG.portrange_mi +
-            " to " +
-            DEFAULT_CONFIG.portrange_mx +
-            ")"
-        );
-      }
-    } else {
-      new Error("[Puffanee] Web Class Construct Error: 'Port' invalid");
-    }
-    if (
-      ViewsPath !== null &&
-      typeof ViewsPath === "string" &&
-      StaticPath !== null &&
-      typeof StaticPath === "string"
-    ) {
-      this.Path_Views = ViewsPath;
-      this.Path_Static = StaticPath;
-    } else {
-      new Error(
-        "[Puffanee] Web Class Construct Error: 'Views Path' or/and 'Static Path' invalid"
+  constructor(Client, WebPort, Passwords, AppStartTime = new Date()) {
+    if (!Client) {
+      throw new Error(
+        "[Puffanee] Web Class Construct Error: 'Client' is invalid"
       );
     }
-    if (Passwords !== null && typeof Passwords === "object") {
-      this.HashOfMasterPassword = Passwords.Master;
-      this.HashOfOperationPassword = Passwords.Operation;
-    } else {
-      new Error("[Puffanee] Web Class Construct Error: 'Passwords' invalid");
+    this.client = Client;
+
+    if (!WebPort || typeof WebPort !== "number") {
+      throw new Error(
+        "[Puffanee] Web Class Construct Error: 'WebPort' is invalid"
+      );
     }
+    if (!pfportrange(WebPort)) {
+      throw new Error(
+        "[Puffanee] Web Class Construct Error: 'WebPort' is not in Puffanee Ports Range"
+      );
+    }
+    this.Port = WebPort;
+
+    this.Path_Views = "./fe/views/";
+    this.Path_Static = "./fe/static/";
+
+    if (
+      !Passwords ||
+      typeof Passwords !== "object" ||
+      !Passwords.Master ||
+      !Passwords.Operation
+    ) {
+      throw new Error(
+        "[Puffanee] Web Class Construct Error: 'Passwords' are invalid"
+      );
+    }
+    this.HashOfMasterPassword = Passwords.Master;
+    this.HashOfOperationPassword = Passwords.Operation;
+
     this.AppStartDT = AppStartTime;
   }
 
@@ -246,27 +184,41 @@ export class PuffaneeWebPanel {
    * @param {object} Security Security configuration object data
    * @param {string} PuffaneeMTNCDG_Path Puffanee Maintenance Debug Database Configuration class path string
    */
-  async Open(Security, PuffaneeMTNCDG_Path) {
-    const {
-      getDebugState,
-      setDebugState,
-      getMaintenanceState,
-      setMaintenanceState,
-      OppositeDebugState,
-      OppositeMaintenanceState,
-    } = await import(PuffaneeMTNCDG_Path);
+  /**
+   * Open new express server with construct data
+   * @param {object} Security Security configuration object data
+   * @param {*} getDebugState MTNCDG getDebugState Function
+   * @param {*} setDebugState MTNCDG setDebugState Function
+   * @param {*} getMaintenanceState MTNCDG getMaintenanceState Function
+   * @param {*} setMaintenanceState MTNCDG setMaintenanceState Function
+   * @param {*} OppositeDebugState MTNCDG OppositeDebugState Function
+   * @param {*} OppositeMaintenanceState MTNCDG OppositeMaintenanceState Function
+   */
+  async Open(
+    Security,
+    getDebugState,
+    setDebugState,
+    getMaintenanceState,
+    setMaintenanceState,
+    OppositeDebugState,
+    OppositeMaintenanceState
+  ) {
+    if (!this.Path_Views || !this.Path_Static) {
+      throw new Error("[Puffanee] Web Class Open Error: 'Paths' are not set");
+    }
+
     const app = express();
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     app.use(express.static(join(__dirname, this.Path_Static)));
-    app.set("view engine", "ejs");
     app.set("views", join(__dirname, this.Path_Views));
+    app.set("view engine", "ejs");
 
-    app.listen(this.web_port, () => {
+    app.listen(this.Port, () => {
       console.log(
         t.bold.blue.toFunction()("[Puffanee] ") +
           t.bold.yellow.toFunction()("Web ") +
-          t.green.toFunction()(`Running on http://localhost:${this.web_port}`)
+          t.green.toFunction()(`Running on http://localhost:${this.Port}`)
       );
     });
 
@@ -277,7 +229,7 @@ export class PuffaneeWebPanel {
     });
 
     app.get("/uptime", (req, res) => {
-      const uptimeString = CalculateUptime();
+      const uptimeString = this.CalculateUptime();
       res.json({ uptime: uptimeString });
     });
 
@@ -406,7 +358,7 @@ export class PuffaneeWebPanel {
     app.get("/clientdata/:pwd", async (req, res) => {
       const pwd = req.params.pwd;
 
-      if (await CheckMasterPassword(pwd)) {
+      if (await this.CheckMasterPassword(pwd)) {
         let clienData = {};
 
         const activity = this.client.user?.presence.activities[0];
@@ -425,7 +377,7 @@ export class PuffaneeWebPanel {
           });
         }
 
-        const MachineIpAdresses = MachineIpAdressesList();
+        const MachineIpAdresses = this.MachineIpAdressesList();
 
         clienData = {
           Presence: { ActivityData: activity, Status: status },
