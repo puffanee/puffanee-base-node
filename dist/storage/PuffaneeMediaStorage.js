@@ -21,7 +21,7 @@ const DEFAULT_MEDIA_STORAGE_OPTIONS = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const tempDir = path.join(__dirname, "pf_temp");
+const tempDir = path.join(__dirname, "pf_mediatemp");
 if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
