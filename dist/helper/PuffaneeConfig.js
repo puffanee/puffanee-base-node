@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 export class PuffaneeConfig {
   constructor() {
-    const dbDir = path.join(__dirname, "..", "..", "_data");
+    const dbDir = path.join(__dirname, "..", "..", "..", "_data");
 
     if (!fs.existsSync(dbDir)) {
       fs.mkdirSync(dbDir, { recursive: true });
