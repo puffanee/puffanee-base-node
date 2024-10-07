@@ -33,7 +33,7 @@ export class PuffaneeTime {
    *
    * @returns
    */
-  fixedLogDT() {
+  fixedLogDT(ms = false) {
     var now = new Date();
     var y = now.getFullYear();
     var m = String(now.getMonth() + 1).padStart(2, "0");
@@ -41,7 +41,12 @@ export class PuffaneeTime {
     var h = String(now.getHours()).padStart(2, "0");
     var mi = String(now.getMinutes()).padStart(2, "0");
     var s = String(now.getSeconds()).padStart(2, "0");
-    return `${this.unixTime()} ${y}/${m}/${d} ${h}:${mi}:${s}`;
+    var ms = String(now.getMilliseconds()).padStart(2, "0");
+    if (ms) {
+      return `${this.unixTime()} ${y}/${m}/${d} ${h}:${mi}:${s}:${ms}`;
+    } else {
+      return `${this.unixTime()} ${y}/${m}/${d} ${h}:${mi}:${s}`;
+    }
   }
 
   /**
