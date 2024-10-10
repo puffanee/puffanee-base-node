@@ -2,6 +2,7 @@ import express from "express";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import https from "https"; // HTTPS modülünü dahil ediyoruz
 
 import crypto from "crypto";
 import os from "os";
@@ -58,6 +59,7 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
 
     this.Path_Views = "./fe/views/";
     this.Path_Static = "./fe/static/";
+    this.Path_Certs = "./fe/certs/";
 
     if (
       !Passwords ||
@@ -201,11 +203,47 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
     app.set("views", join(__dirname, this.Path_Views));
     app.set("view engine", "ejs");
 
-    app.listen(this.Port, () => {
+    const PathCerts = join(__dirname, this.Path_Certs);
+    const SSL_keyPath = join(PathCerts, "server.key");
+    const SSL_certPath = join(PathCerts, "server.cert");
+
+    if (!fs.existsSync(SSL_keyPath)) {
+      throw new Error("[Puffanee] Open panel error: no SSL server.key found");
+    } else {
+      console.log(
+        t.bold.blue.toFunction()("[Puffanee] ") +
+          t.bold.yellow.toFunction()("Web Certificate ") +
+          t.green.toFunction()(`server.key founded.`)
+      );
+    }
+
+    if (!fs.existsSync(SSL_certPath)) {
+      throw new Error("[Puffanee] Open panel error: no SSL server.cert found");
+    } else {
+      console.log(
+        t.bold.blue.toFunction()("[Puffanee] ") +
+          t.bold.yellow.toFunction()("Web Certificate ") +
+          t.green.toFunction()(`server.cert founded.`)
+      );
+    }
+
+    let sslOptions = {};
+
+    try {
+      sslOptions = {
+        key: fs.readFileSync(SSL_keyPath),
+        cert: fs.readFileSync(SSL_certPath),
+        // ca: fs.readFileSync(join(certPath, "ca.pem")),
+      };
+    } catch (error) {
+      console.error("SSL sertifika dosyaları okunamadı:", error);
+    }
+
+    https.createServer(sslOptions, app).listen(this.Port, () => {
       console.log(
         t.bold.blue.toFunction()("[Puffanee] ") +
           t.bold.yellow.toFunction()("Web ") +
-          t.green.toFunction()(`Running on http://localhost:${this.Port}`)
+          t.green.toFunction()(`Running on https://localhost:${this.Port}`)
       );
     });
 
@@ -228,7 +266,7 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
     app.post("/operation", async (req, res) => {
       const { password, type, newData } = req.body;
 
-      if (this.CheckOperationPassword(password)) {
+      if (await this.CheckOperationPassword(password)) {
         if (type === "ChangeStatus") {
           const updatedStatus = this.ChangeBotStatus(newData);
           if (updatedStatus) {
@@ -409,7 +447,7 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
     app.get("/masterpassword/:pwd", async (req, res) => {
       const pwd = req.params.pwd;
 
-      if (this.CheckMasterPassword(pwd)) {
+      if (await this.CheckMasterPassword(pwd)) {
         res.send({
           validation: true,
         });
@@ -423,7 +461,7 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
     app.get("/oppassword/:pwd", async (req, res) => {
       const pwd = req.params.pwd;
 
-      if (this.CheckOperationPassword(pwd)) {
+      if (await this.CheckOperationPassword(pwd)) {
         res.send({
           validation: true,
         });
