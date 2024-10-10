@@ -6,7 +6,7 @@ export class PuffaneeFilter {
     const __filename = new URL(import.meta.url).pathname;
     this.__dirname = dirname(__filename);
 
-    this.init();
+    this.initPromise = this.init();
   }
 
   async init() {
@@ -22,10 +22,10 @@ export class PuffaneeFilter {
       );
     } catch (error) {
       console.error("Error loading JSON files:", error);
+      throw error;
     }
   }
 
-  // URL'den JSON verisini çeken metod
   async fetchJSON(url) {
     const response = await fetch(url);
     if (!response.ok) {
@@ -40,7 +40,8 @@ export class PuffaneeFilter {
    * @param {string} inputString Check string
    * @returns
    */
-  checkBadWord(inputString) {
+  async checkBadWord(inputString) {
+    await this.initPromise;
     const words = inputString.toLowerCase().split(/\s+/);
     for (const word of words) {
       if (
@@ -59,7 +60,8 @@ export class PuffaneeFilter {
    * @param {string} string Check string
    * @returns
    */
-  checkLink(string) {
+  async checkLink(string) {
+    await this.initPromise;
     const links = string.match(/https?:\/\/[^\s]+/g);
     if (!links) {
       return false;
