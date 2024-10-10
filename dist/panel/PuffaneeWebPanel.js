@@ -59,7 +59,11 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
 
     this.Path_Views = "./fe/views/";
     this.Path_Static = "./fe/static/";
-    this.Path_Certs = "./fe/certs/";
+    this.Path_Certs = "./fe/cert/";
+
+    if (!fs.existsSync(this.Path_Certs)) {
+      fs.mkdirSync(this.Path_Certs);
+    }
 
     if (
       !Passwords ||

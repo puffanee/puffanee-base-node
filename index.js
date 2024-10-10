@@ -2,7 +2,7 @@ import axios from "axios";
 import { t } from "tasai";
 
 /* !!!!!! DO NOT CHANGE !!!!!! */
-export const version = "3.3.5";
+export const version = "3.3.6";
 /* !!!!!! DO NOT CHANGE !!!!!! */
 
 export { PuffaneeAPI } from "./dist/api/PuffaneeAPI.js";
