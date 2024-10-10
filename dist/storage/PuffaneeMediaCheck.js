@@ -120,4 +120,88 @@ export class PuffaneeMediaCheck {
       return false;
     }
   }
+
+  /**
+ * Image safety control set message
+ *
+ * @param {Object} scores Scores
+ * @param {string} language Messages langugage
+ * @param {*} scoreSettings Score control settings default is {
+  adultScore: 3, // control w/ <= / YETİŞKİN
+  spoofScore: 3, // control w/  < / PARDOİ
+  medicalScore: 3, // control w/ <= / MEDİKAL İÇERİK
+  violenceScore: 3, // control w/ <= / ŞİDDET
+  racyScore: 4, // control w/ <= / AÇIKLIK
+}
+ * @param {number} returnSetting '0' or '1'
+ */
+  evaluateScores(scores, language, scoreSettings = null, returnSetting = 0) {
+    if (scoreSettings == null) {
+      scoreSettings = DEFAULT_OPTIONS.DEFAULT_SAFE_SCORES;
+    } else {
+      if (
+        !scoreSettings["adultScore"] ||
+        !scoreSettings["spoofScore"] ||
+        !scoreSettings["medicalScore"] ||
+        !scoreSettings["violenceScore"] ||
+        !scoreSettings["racyScore"]
+      ) {
+        return "ERR: 1(inScoreArray)";
+      }
+    }
+
+    const adultScore = scoreSettings["adultScore"];
+    const spoofScore = scoreSettings["spoofScore"];
+    const medicalScore = scoreSettings["medicalScore"];
+    const violenceScore = scoreSettings["violenceScore"];
+    const racyScore = scoreSettings["racyScore"];
+
+    let result = [];
+
+    if (scores.adult >= adultScore) {
+      result.push(
+        language === "tr"
+          ? "● Yetişkin içeriği (naked fotoğraflar, aşırı naked çizimler, ekstra fazla kan veya cinsel organ)"
+          : "● Adult content (nude photos, excessive nude drawings, extra blood or genitalia)"
+      );
+    }
+    if (scores.spoof >= spoofScore) {
+      result.push(
+        language === "tr"
+          ? "● Sahte / parodi içerik (internetten alıntı, uygulama ekranından alınmış veya fazla referans içerme)"
+          : "● Fake / parody content (quoted from the internet, taken from the application screen or contain too many references)"
+      );
+    }
+    if (scores.medical >= medicalScore) {
+      result.push(
+        language === "tr"
+          ? "● Medikal içerik (fazla kan, ameliyat gibi medikal şeyler ve eşyalar)"
+          : "● Medical content (medical supplies and items such as excess blood, surgery)"
+      );
+    }
+    if (scores.violence >= violenceScore) {
+      result.push(
+        language === "tr"
+          ? "● Şiddet içeriği (fazla kavga-dövüş, yumruk, silah vb.)"
+          : "● Violent content (too much fight, punch, gun, etc.)"
+      );
+    }
+    if (scores.racy >= racyScore) {
+      result.push(
+        language === "tr"
+          ? "● Aşırı müstehcenlik (aşırı meme içeriği veya görünür ucu, aşırı görünür kalça)"
+          : "● Excess Racy content (excess breast content or visible tip, excess visible buttocks)"
+      );
+    }
+
+    if (result.length > 0) {
+      if (returnSetting === 0) {
+        return result.join(", ");
+      } else if (returnSetting === 1) {
+        return result.join("\n");
+      }
+    } else {
+      return language === "tr" ? "● Hiç bir sorun yok" : "● No problems found";
+    }
+  }
 }
