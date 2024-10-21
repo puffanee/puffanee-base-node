@@ -44,9 +44,9 @@ $(document).ready(function () {
 });
 
 $("#SecurityLogin").on("click", async function () {
-  s2Spinner(true);
   const mpws = prompt("Please enter Master Password");
   if (mpws !== null) {
+    s2Spinner(true);
     const l = await MasterLogin(mpws);
     if (l === true) {
       s2Spinner(false);
@@ -68,15 +68,15 @@ $("#SecurityLogin").on("click", async function () {
         true,
         '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
       );
-      showAlert(`${l}`, "bg__softred", "bg__softred__dark");
+      showAlert(`Invalid login.`, "bg__softred", "bg__softred__dark");
     }
   }
 });
 
 $("#SecurityLogin2").on("click", async function () {
-  s2Spinner(true);
   const mpws = prompt("Please enter Master Password");
   if (mpws !== null) {
+    s2Spinner(true);
     const l = await MasterLogin(mpws);
     if (l === true) {
       s2Spinner(false);
@@ -98,7 +98,7 @@ $("#SecurityLogin2").on("click", async function () {
         true,
         '<i class="fa-solid fa-xmark" style="font-size: 50px; color: var(--softred-color);"></i>'
       );
-      showAlert(`${l}`, "bg__softred", "bg__softred__dark");
+      showAlert(`Invalid login.`, "bg__softred", "bg__softred__dark");
     }
   }
 });
@@ -114,6 +114,9 @@ async function MasterPasswordCheck(pwd) {
 }
 
 async function OpPasswordLogin(pwd) {
+  if (pwd === null || pwd === undefined || pwd === "" || pwd === " ") {
+    return "Please enter an password.";
+  }
   const cookie = getCookie("__mst");
   const cookiePwd = getCookie("__mstpw");
 
@@ -161,6 +164,10 @@ async function OperationSend(pwd, op, newdata) {
 }
 
 async function MasterLogin(pwd) {
+  if (pwd === null || pwd === undefined || pwd === "" || pwd === " ") {
+    return "Please enter an password.";
+  }
+
   const cookie = getCookie("__mst");
   const cookiePwd = getCookie("__mstpw");
   if (cookie === "" && cookiePwd === "") {
@@ -204,3 +211,21 @@ async function GetServerInfo(ServerID) {
     });
   });
 }
+
+(function () {
+  const stylePfn =
+    "font-size: 50px; font-weight: bold; color: white; background-color: dodgerblue; text-shadow: 2px 2px black; padding: 20px; border: 5px solid white; border-radius: 10px;";
+  const styleMsg =
+    "font-size: 50px; font-weight: bold; color: white; background-color: darkred; text-shadow: 2px 2px black; padding: 20px; border: 5px solid red; border-radius: 10px;";
+  console.log("%cPUFFANEE", stylePfn);
+  console.log(
+    "%cDİKKAT: Bu konsol üzerinden size herhangi bir kod çalıştırmanız veya bir elemanın içeriğini isteyenlerin dediklerini yapmayınız. Bunları yapmak çok ciddi güvenlik sorunlarına neden olabilir.\nCAUTION: Do not use this console to run any code or request the contents of an element. Doing so can cause very serious security problems.",
+    styleMsg
+  );
+  setInterval(() => {
+    console.log(
+      "%cDİKKAT: Bu konsol üzerinden size herhangi bir kod çalıştırmanız veya bir elemanın içeriğini isteyenlerin dediklerini yapmayınız. Bunları yapmak çok ciddi güvenlik sorunlarına neden olabilir.\nCAUTION: Do not use this console to run any code or request the contents of an element. Doing so can cause very serious security problems.",
+      styleMsg
+    );
+  }, 2000);
+})();
