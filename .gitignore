@@ -1,4 +1,3 @@
 node_modules/
 jspm_packages/
 .npm
-dist/panel/last_discord_rpc_activity.json
