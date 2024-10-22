@@ -130,11 +130,7 @@ export class PuffaneeClient {
       const city = ipAdressData.city;
       const region = ipAdressData.region;
       const country = ipAdressData.country;
-      const gCountryName = await this.GetCountryName(country);
-      const countryName =
-        gCountryName === "undefined" || "search_empty"
-          ? country
-          : `${gCountryName} (${country})`;
+      const countryName = `${await this.GetCountryName(country)} (${country})`;
       const coords = ipAdressData.loc;
       const org = ipAdressData.org;
       const pcode = ipAdressData.postal;

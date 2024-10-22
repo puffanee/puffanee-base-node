@@ -74,18 +74,18 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
       );
     }
 
-    if (!fs.existsSync(DEFAULT_OPTIONS.library_data_path)) {
+    if (!fs.existsSync(DEFAULT_CONFIG.library_data_path)) {
       throw new Error(
         `[Puffanee] Web Class Construct Error: Library '_data' directory not found`
       );
     }
 
     const SSL_keyPath = path.join(
-      DEFAULT_OPTIONS.library_data_path,
+      DEFAULT_CONFIG.library_data_path,
       "server.key"
     );
     const SSL_certPath = path.join(
-      DEFAULT_OPTIONS.library_data_path,
+      DEFAULT_CONFIG.library_data_path,
       "server.cert"
     );
 
