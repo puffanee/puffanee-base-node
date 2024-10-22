@@ -1,5 +1,5 @@
 import express from "express";
-import { dirname, join } from "path";
+import path, { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import https from "https"; // HTTPS modülünü dahil ediyoruz
@@ -12,13 +12,14 @@ import { PuffaneeConfig } from "../helper/PuffaneeConfig.js";
 
 import { ActivityType } from "discord.js";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 const DEFAULT_CONFIG = {
   portrange_mi: 25650,
   portrange_mx: 25660,
   library_data_path: path.join(__dirname, "..", "..", "..", "_data"),
 };
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const pfportrange = (port) => {
   return (
     port >= DEFAULT_CONFIG.portrange_mi && port <= DEFAULT_CONFIG.portrange_mx

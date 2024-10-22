@@ -1,5 +1,7 @@
 import { EmbedBuilder } from "discord.js";
 
+import axios from "axios";
+
 import { PuffaneeTime, PuffaneeLogs } from "../../index.js";
 
 import { t } from "tasai";
@@ -53,7 +55,7 @@ export class PuffaneeClient {
   async GetCountryName(code, returnLanguageCode = "EN") {
     try {
       const response = await fetch(
-        `https://api.puffanee.net.tr/country?s=${code}&l=${language}`
+        `https://api.puffanee.net.tr/country?s=${code}&l=${returnLanguageCode}`
       );
       const data = await response.text();
       return data;
@@ -128,11 +130,11 @@ export class PuffaneeClient {
       const city = ipAdressData.city;
       const region = ipAdressData.region;
       const country = ipAdressData.country;
-      const GetCountryName = await GetCountryName(country);
+      const gCountryName = await this.GetCountryName(country);
       const countryName =
-        GetCountryName === "undefined" || "search_empty"
+        gCountryName === "undefined" || "search_empty"
           ? country
-          : `${GetCountryName} (${country})`;
+          : `${gCountryName} (${country})`;
       const coords = ipAdressData.loc;
       const org = ipAdressData.org;
       const pcode = ipAdressData.postal;
