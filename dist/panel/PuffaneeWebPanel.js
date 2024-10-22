@@ -375,16 +375,27 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
 
           function saveActivityToFile(activity) {
             fs.writeFileSync(
-              join(__dirname, "./last_discord_rpc_activity.json"),
+              join(
+                DEFAULT_CONFIG.library_data_path,
+                "webpanel_lastrpcact.json"
+              ),
               JSON.stringify(activity)
             );
           }
           function loadActivityFromFile() {
             if (
-              fs.existsSync(join(__dirname, "./last_discord_rpc_activity.json"))
+              fs.existsSync(
+                join(
+                  DEFAULT_CONFIG.library_data_path,
+                  "webpanel_lastrpcact.json"
+                )
+              )
             ) {
               const data = fs.readFileSync(
-                join(__dirname, "./last_discord_rpc_activity.json")
+                join(
+                  DEFAULT_CONFIG.library_data_path,
+                  "webpanel_lastrpcact.json"
+                )
               );
               return JSON.parse(data);
             }
