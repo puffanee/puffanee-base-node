@@ -15,6 +15,7 @@ import { ActivityType } from "discord.js";
 const DEFAULT_CONFIG = {
   portrange_mi: 25650,
   portrange_mx: 25660,
+  library_data_path: path.join(__dirname, "..", "..", "..", "_data"),
 };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -59,11 +60,36 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
 
     this.Path_Views = "./fe/views/";
     this.Path_Static = "./fe/static/";
-    this.Path_Certs = "./fe/cert/";
 
-    if (!fs.existsSync(join(__dirname, this.Path_Certs))) {
-      fs.mkdirSync(join(__dirname, this.Path_Certs));
+    if (!fs.existsSync(join(__dirname, this.Path_Views))) {
+      throw new Error(
+        "[Puffanee] Web Class Construct Error: 'Views Path' not found. Please reinstall Puffanee Base"
+      );
     }
+
+    if (!fs.existsSync(join(__dirname, this.Path_Static))) {
+      throw new Error(
+        "[Puffanee] Web Class Construct Error: 'Views Path' not found. Please reinstall Puffanee Base"
+      );
+    }
+
+    if (!fs.existsSync(DEFAULT_OPTIONS.library_data_path)) {
+      throw new Error(
+        `[Puffanee] Web Class Construct Error: Library '_data' directory not found`
+      );
+    }
+
+    const SSL_keyPath = path.join(
+      DEFAULT_OPTIONS.library_data_path,
+      "server.key"
+    );
+    const SSL_certPath = path.join(
+      DEFAULT_OPTIONS.library_data_path,
+      "server.cert"
+    );
+
+    this.SSLPath_Key = SSL_keyPath;
+    this.SSLPath_Cert = SSL_certPath;
 
     if (
       !Passwords ||
@@ -207,11 +233,7 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
     app.set("views", join(__dirname, this.Path_Views));
     app.set("view engine", "ejs");
 
-    const PathCerts = join(__dirname, this.Path_Certs);
-    const SSL_keyPath = join(PathCerts, "server.key");
-    const SSL_certPath = join(PathCerts, "server.cert");
-
-    if (!fs.existsSync(SSL_keyPath)) {
+    if (!fs.existsSync(this.SSLPath_Key)) {
       throw new Error("[Puffanee] Open panel error: no SSL server.key found");
     } else {
       console.log(
@@ -221,7 +243,7 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
       );
     }
 
-    if (!fs.existsSync(SSL_certPath)) {
+    if (!fs.existsSync(this.SSLPath_Cert)) {
       throw new Error("[Puffanee] Open panel error: no SSL server.cert found");
     } else {
       console.log(
@@ -235,12 +257,15 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
 
     try {
       sslOptions = {
-        key: fs.readFileSync(SSL_keyPath),
-        cert: fs.readFileSync(SSL_certPath),
-        // ca: fs.readFileSync(join(certPath, "ca.pem")),
+        key: fs.readFileSync(this.SSLPath_Key),
+        cert: fs.readFileSync(this.SSLPath_Cert),
+        // ca: fs.readFileSync(join(certPath, "ca.pem")), 'ca' not using. //
       };
     } catch (error) {
-      console.error("SSL sertifika dosyaları okunamadı:", error);
+      console.error(
+        "[Puffanee] Open panel error: SSL Cerificate files view error:",
+        error
+      );
     }
 
     https.createServer(sslOptions, app).listen(this.Port, () => {

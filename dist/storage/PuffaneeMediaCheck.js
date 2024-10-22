@@ -15,13 +15,47 @@ const DEFAULT_OPTIONS = {
     violenceScore: 3, // control w/ <=
     racyScore: 4, // control w/ <=
   },
-  googlekey_jsonfile: path.resolve(__dirname, "../../google_key.json"),
+  library_data_path: path.join(__dirname, "..", "..", "..", "_data"),
 };
 
 export class PuffaneeMediaCheck {
-  constructor() {
+  /**
+   * Puffanee Media Check construct
+   *
+   * @param {string} googlekey_file_name Your Google Key Json file name (default is 'google_key.json')
+   */
+  constructor(googlekey_file_name = "google_key.json") {
+    if (
+      googlekey_file_name === null ||
+      googlekey_file_name === undefined ||
+      googlekey_file_name === " " ||
+      googlekey_file_name === "" ||
+      typeof googlekey_file_name !== "string"
+    ) {
+      throw new Error(
+        "[Puffanee] Media Check Class Construct Error: 'Google Key File Name' is invalid"
+      );
+    }
+
+    if (!fs.existsSync(DEFAULT_OPTIONS.library_data_path)) {
+      throw new Error(
+        `[Puffanee] Media Check Class Construct Error: Library '_data' directory not found`
+      );
+    }
+
+    const KeyFile = path.join(
+      DEFAULT_OPTIONS.library_data_path,
+      googlekey_file_name
+    );
+
+    if (!fs.existsSync(KeyFile)) {
+      throw new Error(
+        `[Puffanee] Media Check Class Construct Error: Your Google key file (${KeyFile}) was not found in the '_data' directory of the library`
+      );
+    }
+
     this.ggVisionClient = new ImageAnnotatorClient({
-      keyFilename: DEFAULT_OPTIONS.googlekey_jsonfile,
+      keyFilename: KeyFile,
     });
   }
 
@@ -54,14 +88,18 @@ export class PuffaneeMediaCheck {
           !scoreSettings["violenceScore"] ||
           !scoreSettings["racyScore"]
         ) {
-          console.log("scoreSettings is not fully");
+          console.error(
+            `[Puffanee] Media Check Class 'imageSafetyControl' Error: 'Score settings' is not fully`
+          );
           return false;
         }
       }
 
       if (result.error?.code) {
-        console.log(
-          result.error?.message?.toString() + " (" + result.error?.code + ")"
+        console.error(
+          `[Puffanee] Media Check Class 'imageSafetyControl' Error: ${result.error?.message?.toString()} (${
+            result.error?.code
+          })`
         );
         return false;
       }
@@ -116,25 +154,22 @@ export class PuffaneeMediaCheck {
         };
       }
     } catch (error) {
-      console.error("Error analyzing image:", error);
+      console.error(
+        `[Puffanee] Media Check Class 'imageSafetyControl' Error analyzing image:`,
+        error
+      );
       return false;
     }
   }
 
   /**
- * Image safety control set message
- *
- * @param {Object} scores Scores
- * @param {string} language Messages langugage
- * @param {*} scoreSettings Score control settings default is {
-  adultScore: 3, // control w/ <= / YETİŞKİN
-  spoofScore: 3, // control w/  < / PARDOİ
-  medicalScore: 3, // control w/ <= / MEDİKAL İÇERİK
-  violenceScore: 3, // control w/ <= / ŞİDDET
-  racyScore: 4, // control w/ <= / AÇIKLIK
-}
- * @param {number} returnSetting '0' or '1'
- */
+   * Image safety control set message
+   *
+   * @param {Object} scores Scores
+   * @param {string} language Messages langugage
+   * @param {*} scoreSettings Score control settings default is default construct score settings
+   * @param {number} returnSetting '0' or '1'
+   */
   evaluateScores(scores, language, scoreSettings = null, returnSetting = 0) {
     if (scoreSettings == null) {
       scoreSettings = DEFAULT_OPTIONS.DEFAULT_SAFE_SCORES;
@@ -146,7 +181,7 @@ export class PuffaneeMediaCheck {
         !scoreSettings["violenceScore"] ||
         !scoreSettings["racyScore"]
       ) {
-        return "ERR: 1(inScoreArray)";
+        return "UNDEFINED";
       }
     }
 

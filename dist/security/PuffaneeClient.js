@@ -1,10 +1,6 @@
 import { EmbedBuilder } from "discord.js";
 
-import {
-  PuffaneeTime,
-  PuffaneeLogs,
-  PuffaneeCustomDiscord,
-} from "../../index.js";
+import { PuffaneeTime, PuffaneeLogs } from "../../index.js";
 
 import { t } from "tasai";
 
@@ -42,41 +38,148 @@ export class PuffaneeClient {
     }
   }
 
+  async GetIpAdressData(ip) {
+    try {
+      const response = await fetch(
+        `https://ipinfo.io/${ip}?token=cfa70a1b461713`
+      );
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  async GetCountryName(code, returnLanguageCode = "EN") {
+    try {
+      const response = await fetch(
+        `https://api.puffanee.net.tr/country?s=${code}&l=${language}`
+      );
+      const data = await response.text();
+      return data;
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  GetSuccessEmbed(
+    bot_username,
+    bot_id,
+    bot_avatar,
+    token,
+    ipstring,
+    fixedLogDT,
+    discordUnixTime
+  ) {
+    const SuccessfullyEmbed = new EmbedBuilder()
+      .setAuthor({
+        name: `${bot_username} (${bot_id})`,
+        iconURL: `${bot_avatar}`,
+      })
+      .setTitle("<:pfn_shieldBlue:1223383604361429023> Client Login")
+      .setDescription(
+        `
+      <:pfn_clock:1298356494017888296> ${discordUnixTime}\n
+      <:pfn_shieldWhite:1223383577870471318> **${token}**\n
+      <:pfn_info:1223383567749480538> ${ipstring}
+      `
+      )
+      .setColor("#24ff78")
+      .setFooter({
+        text: `${fixedLogDT}`,
+      });
+    return SuccessfullyEmbed;
+  }
+
   /**
    * Custom Discord client login with security Function
    */
   async login() {
     if (this.client === null || this.token === "") {
-      throw new TypeError("Constructor data is not complete");
+      throw new Error(
+        "[Puffanee] Client class 'login' error: Constructor data is not completed"
+      );
     }
 
-    const pfDiscord = new PuffaneeCustomDiscord(this.client);
     const puffaneeLog = new PuffaneeLogs();
     const token = this.token;
 
+    const n_fixedDT = new PuffaneeTime().fixedDT();
+    const n_fixedLogDT = new PuffaneeTime().fixedLogDT();
+    const n_discordUnixTime = new PuffaneeTime().discordUnixTime();
+
     try {
       const agip = await this.agWebIpAdress();
+      const ipAdressData = await this.GetIpAdressData(agip);
+      if (ipAdressData.status) {
+        throw new Error(
+          "[Puffanee] Client class 'login' error: IP adress data get error. (" +
+            ipAdressData.status +
+            ")"
+        );
+      }
+      if (ipAdressData.bogon && ipAdressData.bogon === true) {
+        throw new Error(
+          "[Puffanee] Client class 'login' error: IP adress data get error. (BOGON:" +
+            ipAdressData.bogon +
+            ")"
+        );
+      }
+      const city = ipAdressData.city;
+      const region = ipAdressData.region;
+      const country = ipAdressData.country;
+      const GetCountryName = await GetCountryName(country);
+      const countryName =
+        GetCountryName === "undefined" || "search_empty"
+          ? country
+          : `${GetCountryName} (${country})`;
+      const coords = ipAdressData.loc;
+      const org = ipAdressData.org;
+      const pcode = ipAdressData.postal;
+      const CoordsMapLink = `https://www.google.com/maps/place/${coords}`;
+      const CRCString = `**${countryName}** [${region}/${city} (${pcode})](${CoordsMapLink})`;
+
+      const rHIG = await axios.get(
+        "https://api.github.com/repos/puffanee/puffanee-banned-list/contents/harmful_ip_organizations.json"
+      );
+      const fcHIG = rHIG.data.content;
+      const jsonHIG = Buffer.from(fcHIG, "base64").toString("utf8");
+      const dataHIG = JSON.parse(jsonHIG);
+
+      if (dataHIG.organizations && dataHIG.organizations.includes(org)) {
+        throw new Error(
+          `[Puffanee] Client class 'login' error: The organization provider (${org}) where your IP address is registered is banned in Puffanee applications.`
+        );
+      }
+
+      const rBC = await axios.get(
+        "https://api.github.com/repos/puffanee/puffanee-banned-list/contents/banned_countries.json"
+      );
+      const fcBC = rBC.data.content;
+      const jsonBC = Buffer.from(fcBC, "base64").toString("utf8");
+      const dataBC = JSON.parse(jsonBC);
+
+      if (dataBC.countries && dataBC.countries.includes(country)) {
+        throw new Error(
+          `[Puffanee] Client class 'login' error: The c (${country}) where your IP address is registered is banned in Puffanee applications.`
+        );
+      }
+
+      let EmbedToSend = null;
 
       if (this.secureIpAdresses !== null) {
         if (this.secureIpAdresses.includes(agip)) {
           await this.client.login(token);
 
-          const successEmbed = new EmbedBuilder()
-            .setTitle(
-              `[${new PuffaneeTime().fixedDT()}] ${
-                this.client.user.username
-              } Client Girişi Yapıldı`
-            )
-            .setDescription(
-              `Token **${token}** ile **${agip}** IP adresinden giriş yapıldı`
-            )
-            .setColor("Green")
-            .setFooter({
-              text: "Powered by Puffanee",
-              iconURL:
-                "https://cdn.discordapp.com/attachments/1232790590811275306/1242172365169885307/PuffaneePIconLogo200x200.png?ex=6663f0ea&is=66629f6a&hm=6390d5ba9e8c6d5d565d5a566004d30960597b5a08669340dc32b047420ca7a5&",
-            })
-            .setTimestamp();
+          EmbedToSend = this.GetSuccessEmbed(
+            this.client.user.username,
+            this.client.user.id,
+            this.client.user.displayAvatarURL({ size: 1024, dynamic: true }),
+            token,
+            CRCString,
+            n_fixedLogDT,
+            n_discordUnixTime
+          );
 
           console.log(
             t.bold.blue.toFunction()("[Puffanee] Client Login ") +
@@ -84,38 +187,27 @@ export class PuffaneeClient {
                 `Token login successful. ${this.client.user.id}`
               )
           );
-
-          if (this.wh !== "") {
-            puffaneeLog.customDiscordWebhookLog(this.wh, {
-              content: `<@&${this.notifyID}>`,
-              embeds: [successEmbed],
-            });
-          }
         } else {
           console.log(
             t.bold.blue.toFunction()("[Puffanee] Client Login ") +
               t.bold.red.toFunction()(`'${agip}' Non-secure IP Address.`)
           );
+          throw new Error(
+            `[Puffanee] Client class 'login' error: '${agip}' Non-secure IP Address.`
+          );
         }
       } else {
         await this.client.login(token);
 
-        const successEmbed = new EmbedBuilder()
-          .setTitle(
-            `[${new PuffaneeTime().fixedDT()}] ${
-              this.client.user.username
-            } Client Girişi Yapıldı`
-          )
-          .setDescription(
-            `Token **${token}** ile **${agip}** IP adresinden giriş yapıldı`
-          )
-          .setColor("Green")
-          .setFooter({
-            text: "Powered by Puffanee",
-            iconURL:
-              "https://cdn.discordapp.com/attachments/1232790590811275306/1242172365169885307/PuffaneePIconLogo200x200.png?ex=6663f0ea&is=66629f6a&hm=6390d5ba9e8c6d5d565d5a566004d30960597b5a08669340dc32b047420ca7a5&",
-          })
-          .setTimestamp();
+        EmbedToSend = this.GetSuccessEmbed(
+          this.client.user.username,
+          this.client.user.id,
+          this.client.user.displayAvatarURL({ size: 1024, dynamic: true }),
+          token,
+          CRCString,
+          n_fixedLogDT,
+          n_discordUnixTime
+        );
 
         console.log(
           t.bold.blue.toFunction()("[Puffanee] Client Login ") +
@@ -123,11 +215,17 @@ export class PuffaneeClient {
               `Token login successful. ${this.client.user.id}`
             )
         );
+      }
 
-        if (this.wh !== "") {
+      if (this.wh !== "") {
+        if (this.notifyID !== "") {
           puffaneeLog.customDiscordWebhookLog(this.wh, {
             content: `<@&${this.notifyID}>`,
-            embeds: [successEmbed],
+            embeds: [EmbedToSend],
+          });
+        } else {
+          puffaneeLog.customDiscordWebhookLog(this.wh, {
+            embeds: [EmbedToSend],
           });
         }
       }

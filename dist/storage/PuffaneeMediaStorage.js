@@ -21,7 +21,7 @@ const DEFAULT_MEDIA_STORAGE_OPTIONS = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const tempDir = path.join(__dirname, "pf_mediatemp");
+const tempDir = path.join(__dirname, "..", "..", "..", "_puffanee-temp");
 if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
@@ -95,7 +95,7 @@ export class PuffaneeMediaStorage {
       fileExtension = path.extname(urlPathname);
       const tempFilePath = path.join(
         tempDir,
-        `${this.systemprefix}-temp-${Date.now()}${fileExtension}`
+        `MediaTemp-${this.systemprefix}-${Date.now()}${fileExtension}`
       );
 
       await axios({
@@ -226,7 +226,10 @@ export class PuffaneeMediaStorage {
         code: response.data.state.message_code,
       };
     } catch (error) {
-      console.error("Dosya silinirken bir hata oluştu:", error);
+      console.error(
+        "[Puffanee] Media storage 'deleteFile' error: An error has occurred in delete file operation:",
+        error
+      );
       return {
         success: false,
         code: error.response.data.state.message_code || error.message,
