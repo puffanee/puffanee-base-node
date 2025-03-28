@@ -2,7 +2,7 @@ import express from "express";
 import path, { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
-import https from "https"; // HTTPS modülünü dahil ediyoruz
+import https from "https";
 
 import crypto from "crypto";
 import os from "os";
@@ -16,8 +16,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const DEFAULT_CONFIG = {
   portrange_mi: 25650,
-  portrange_mx: 25660,
+  portrange_mx: 25669,
   library_data_path: path.join(__dirname, "..", "..", "..", "_data"),
+  default_host: "localhost",
 };
 
 const pfportrange = (port) => {
@@ -34,10 +35,11 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
    *
    * @param {*} Client Bot Discord Client
    * @param {number} WebPort Run port
+   * @param {string} WebHostname Run hostname (default is "localhost")
    * @param {object} Passwords Security passwords ( This Object data must contain 'Master' and 'Operation' password hash in same name values. Hash methods are in documents)
    * @param {Date} AppStartTime App start Date Time ( Default is: Date() )
    */
-  constructor(Client, WebPort, Passwords, AppStartTime = new Date()) {
+  constructor(Client, WebPort, WebHostname = DEFAULT_CONFIG.default_host, Passwords, AppStartTime = new Date()) {
     super();
 
     if (!Client) {
@@ -58,6 +60,7 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
       );
     }
     this.Port = WebPort;
+    this.Webhost = WebHostname;
 
     this.Path_Views = "./fe/views/";
     this.Path_Static = "./fe/static/";
@@ -239,8 +242,8 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
     } else {
       console.log(
         t.bold.blue.toFunction()("[Puffanee] ") +
-          t.bold.yellow.toFunction()("Web Certificate ") +
-          t.green.toFunction()(`server.key founded.`)
+        t.bold.yellow.toFunction()("Web Certificate ") +
+        t.green.toFunction()(`server.key founded.`)
       );
     }
 
@@ -249,8 +252,8 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
     } else {
       console.log(
         t.bold.blue.toFunction()("[Puffanee] ") +
-          t.bold.yellow.toFunction()("Web Certificate ") +
-          t.green.toFunction()(`server.cert founded.`)
+        t.bold.yellow.toFunction()("Web Certificate ") +
+        t.green.toFunction()(`server.cert founded.`)
       );
     }
 
@@ -269,11 +272,11 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
       );
     }
 
-    https.createServer(sslOptions, app).listen(this.Port, () => {
+    https.createServer(sslOptions, app).listen(this.Port, this.Webhost, () => {
       console.log(
         t.bold.blue.toFunction()("[Puffanee] ") +
-          t.bold.yellow.toFunction()("Web ") +
-          t.green.toFunction()(`Running on https://localhost:${this.Port}`)
+        t.bold.yellow.toFunction()("Web Panel ") +
+        t.green.toFunction()(`Running on https://${this.Hostname}:${this.Port}`)
       );
     });
 
@@ -328,18 +331,18 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
           if (Opposite) {
             console.log(
               t.bold.blue.toFunction()("[Puffanee] ") +
-                t.bold.white.toFunction()("Configuration ") +
-                t.green.toFunction()(
-                  `The 'Debug' configuration was activated by the panel.`
-                )
+              t.bold.white.toFunction()("Configuration ") +
+              t.green.toFunction()(
+                `The 'Debug' configuration was activated by the panel.`
+              )
             );
           } else {
             console.log(
               t.bold.blue.toFunction()("[Puffanee] ") +
-                t.bold.white.toFunction()("Configuration ") +
-                t.red.toFunction()(
-                  `The 'Debug' configuration has been disabled by the panel.`
-                )
+              t.bold.white.toFunction()("Configuration ") +
+              t.red.toFunction()(
+                `The 'Debug' configuration has been disabled by the panel.`
+              )
             );
           }
 
@@ -427,10 +430,10 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
 
             console.log(
               t.bold.blue.toFunction()("[Puffanee] ") +
-                t.bold.white.toFunction()("Configuration ") +
-                t.green.toFunction()(
-                  `The 'Maintenance' configuration was activated by the panel.`
-                )
+              t.bold.white.toFunction()("Configuration ") +
+              t.green.toFunction()(
+                `The 'Maintenance' configuration was activated by the panel.`
+              )
             );
           } else {
             const savedActivity = loadActivityFromFile();
@@ -449,10 +452,10 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
 
             console.log(
               t.bold.blue.toFunction()("[Puffanee] ") +
-                t.bold.white.toFunction()("Configuration ") +
-                t.red.toFunction()(
-                  `The 'Maintenance' configuration has been disabled by the panel.`
-                )
+              t.bold.white.toFunction()("Configuration ") +
+              t.red.toFunction()(
+                `The 'Maintenance' configuration has been disabled by the panel.`
+              )
             );
           }
 

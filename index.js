@@ -2,7 +2,7 @@ import axios from "axios";
 import { t } from "tasai";
 
 /* !!!!!! DO NOT CHANGE !!!!!! */
-export const version = "3.4.3";
+export const version = "3.4.8";
 /* !!!!!! DO NOT CHANGE !!!!!! */
 
 const gtRe = await axios.get(
@@ -19,7 +19,7 @@ if (lV !== gV) {
     `${t.bold.blue.toFunction()("[Puffanee Base]")} ${t.bold.white.toFunction()(
       `v${lV}`
     )} | ${t.bold.red.toFunction()(
-      `A new version is available. (v${gV}) Please run command: node . update in 'PuffaneeBase2' directory`
+      `A new version is available. (v${gV}) Please run command: 'node . update' in 'PuffaneeBase2' directory`
     )}`
   );
 }
