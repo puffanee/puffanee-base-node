@@ -39,7 +39,7 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
    * @param {object} Passwords Security passwords ( This Object data must contain 'Master' and 'Operation' password hash in same name values. Hash methods are in documents)
    * @param {Date} AppStartTime App start Date Time ( Default is: Date() )
    */
-  constructor(Client, WebPort, WebHostname = DEFAULT_CONFIG.default_host, Passwords, AppStartTime = new Date()) {
+  constructor(Client, WebPort, WebHostname, Passwords, AppStartTime = new Date()) {
     super();
 
     if (!Client) {
@@ -60,7 +60,11 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
       );
     }
     this.Port = WebPort;
-    this.Webhost = WebHostname;
+    if (WebHostname === "" || WebHostname === undefined || WebHostname === null) {
+      this.Webhost = WebHostname;
+    } else {
+      this.Webhost = WebHostname;
+    }
 
     this.Path_Views = "./fe/views/";
     this.Path_Static = "./fe/static/";
