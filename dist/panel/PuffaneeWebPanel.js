@@ -49,6 +49,12 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
     }
     this.client = Client;
 
+    if (!WebHostname || typeof WebHostname !== "string") {
+      throw new Error(
+        "[Puffanee] Web Class Construct Error: 'WebPort' is invalid"
+      );
+    }
+    this.Webhost = WebHostname;
     if (!WebPort || typeof WebPort !== "number") {
       throw new Error(
         "[Puffanee] Web Class Construct Error: 'WebPort' is invalid"
@@ -60,11 +66,6 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
       );
     }
     this.Port = WebPort;
-    if (WebHostname === "" || WebHostname === undefined || WebHostname === null) {
-      this.Webhost = WebHostname;
-    } else {
-      this.Webhost = WebHostname;
-    }
 
     this.Path_Views = "./fe/views/";
     this.Path_Static = "./fe/static/";
@@ -280,7 +281,7 @@ export class PuffaneeWebPanel extends PuffaneeConfig {
       console.log(
         t.bold.blue.toFunction()("[Puffanee] ") +
         t.bold.yellow.toFunction()("Web Panel ") +
-        t.green.toFunction()(`Running on https://${this.Hostname}:${this.Port}`)
+        t.green.toFunction()(`Running on https://${this.Webhost}:${this.Port}`)
       );
     });
 
