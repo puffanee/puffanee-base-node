@@ -2,7 +2,7 @@ import axios from "axios";
 import { t } from "tasai";
 
 /* !!!!!! DO NOT CHANGE !!!!!! */
-export const version = "3.4.8";
+export const version = "3.4.9";
 /* !!!!!! DO NOT CHANGE !!!!!! */
 
 const gtRe = await axios.get(
